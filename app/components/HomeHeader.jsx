@@ -13,7 +13,7 @@ import {
     MenuTrigger,
 } from 'react-native-popup-menu';
 import { MenueItems } from './CustomMenu';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { AntDesign, Feather, SimpleLineIcons } from '@expo/vector-icons';
 
 
 export default function HomeHeader() {
@@ -31,7 +31,7 @@ export default function HomeHeader() {
     return (
         <>
             <StatusBar barStyle="light-content" backgroundColor="#3B82F6" />
-            <View style={{ paddingTop: hp(2) }} className='flex-row justify-between px-4 bg-blue-500 pb-5 rounded-b-2xl shadow'>
+            <View style={{ paddingTop: hp(2) }} className='flex-row justify-between px-4 bg-blue-500 pb-5 rounded-b-3xl shadow'>
                 <View>
                     <Text style={{ fontSize: hp(4) }} className='font-semibold text-white'>Chats</Text>
                 </View>
@@ -70,7 +70,7 @@ export default function HomeHeader() {
                             text="Sign out"
                             action={handleLogout}
                             value={null}
-                            icon={<AntDesign name="logout" size={24} color="#737373" />}
+                            icon={<SimpleLineIcons name="logout" size={24} color="#737373" />}
                             />
                         </MenuOptions>
                     </Menu>

@@ -145,7 +145,7 @@ export default function SignUp() {
                             <View className="flex-row justify-center mt-6">
                                 <Text style={{ fontSize: hp(2.1) }} className="text-neutral-400 font-semibold">Already have an account? </Text>
                                 <TouchableOpacity onPress={() => router.push('signIn')}>
-                                    <Text style={{ fontSize: hp(2.1) }} className="bg-[#3B82F6] font-bold">Sign In</Text>
+                                    <Text style={{ fontSize: hp(2.1) }} className="text-blue-500 font-bold">Sign In</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
