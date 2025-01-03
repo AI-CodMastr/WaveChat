@@ -40,10 +40,39 @@ export default function ChatItem({item, router, noBorder, currentUser}) {
         router.push({pathname: '/chatRoom', params: item});
     }
 
+    const getTimeDisplay = (timestamp) => {
+        if (!timestamp) return '';
+        
+        const messageDate = new Date(timestamp.toDate());
+        const now = new Date();
+        const diffInHours = (now - messageDate) / (1000 * 60 * 60);
+        
+        // If message is from today, show only time
+        if (diffInHours < 24 && messageDate.getDate() === now.getDate()) {
+          return messageDate.toLocaleTimeString([], { 
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true 
+          });
+        }
+        
+        // If message is from this week (last 7 days), show day name
+        if (diffInHours < 168) { // 7 days * 24 hours
+          return messageDate.toLocaleDateString([], { weekday: 'short' });
+        }
+        
+        // If older than a week, show date
+        return messageDate.toLocaleDateString([], {
+          month: 'short',
+          day: 'numeric',
+          year: messageDate.getFullYear() !== now.getFullYear() ? '2-digit' : undefined
+        });
+    };
+
     const renderTime = () => {
         if(lastMessage){
             let date = lastMessage?.createdAt;
-            return formateDate(new Date(date?.seconds * 1000));
+            return getTimeDisplay(date);
               
             // console.log('last msg time :', lastMessage?.createdAt);
         }

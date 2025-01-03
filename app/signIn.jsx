@@ -9,6 +9,8 @@ import { useRouter } from 'expo-router';
 import Loading from './components/Loading';
 import { useAuth } from '../context/authContext';
 import { Alert } from 'react-native';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 
 export default function SignIn() {
     const router = useRouter();
@@ -32,6 +34,35 @@ export default function SignIn() {
             Alert.alert('Sign In', response.msg)
         }
     }
+
+    const handleForgotPassword = async () => {
+        try {
+            if (!emailRef.current) {
+                Alert.alert('Reset Password', 'Please enter your email address first');
+                return;
+            }
+
+            setLoading(true);
+            await sendPasswordResetEmail(auth, emailRef.current);
+            Alert.alert(
+                'Reset Password',
+                'Password reset link has been sent to your email',
+                [{ text: 'OK' }]
+            );
+        } catch (error) {
+            console.error('Password reset error:', error);
+            let message = 'Failed to send reset email';
+            if (error.code === 'auth/user-not-found') {
+                message = 'No user found with this email';
+            }
+            if (error.code === 'auth/invalid-email') {
+                message = 'Please enter a valid email';
+            }
+            Alert.alert('Error', message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <ScrollView>
@@ -84,7 +115,10 @@ export default function SignIn() {
                     </View>
 
                     {/* Forgot Password */}
-                    <TouchableOpacity className="mt-2">
+                    <TouchableOpacity 
+                        onPress={handleForgotPassword}
+                        className="mt-2"
+                    >
                         <Text style={{ fontSize: hp(2.1) }} className="text-right text-neutral-400 font-medium">
                             Forgot password?
                         </Text>

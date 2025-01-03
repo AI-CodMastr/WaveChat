@@ -28,7 +28,8 @@ export const AuthContextProvider = ({children}) => {
                            email: user.email,
                            username: userData.username,
                            profileUrl: userData.profileUrl,
-                           userId: userData.userId
+                           userId: userData.userId,
+                           location: userData.location
                        });
                        setIsAuthenticated(true);
                    } else {
@@ -102,8 +103,12 @@ export const AuthContextProvider = ({children}) => {
         }
   };
 
+  const updateUserInContext = (userData) => {
+    setUser(userData);
+  };
+
   return (
-    <AuthContext.Provider value={{user, isAuthenticated, login, logOut, register}}>
+    <AuthContext.Provider value={{user, isAuthenticated, login, logOut, register, updateUserInContext}}>
         {children}
     </AuthContext.Provider>
   )

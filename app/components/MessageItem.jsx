@@ -11,7 +11,7 @@ export default function MessageItem({message, currentUser}) {
             <View className= 'flex-row justify-end mb-4 mr-3'>
                 <View style={{width: wp(80)}}>
                     <View className='flex self-end p-3 px-4 border border-neutral-200 rounded-2xl bg-indigo-100'>
-                        <Text style={{fontSize: hp(2.4)}}>{message?.text}</Text>
+                        <Text style={{fontSize: hp(3.5)}}>{message?.text}</Text>
                     </View>
                 </View>
             </View>
@@ -20,7 +20,7 @@ export default function MessageItem({message, currentUser}) {
         return (
             <View style={{width: wp(80)}} className= 'ml-3 mb-3'>
                     <View className='flex self-start p-3 px-4 rounded-2xl border border-neutral-200 bg-indigo-100'>
-                        <Text style={{fontSize: hp(2.4)}}>{message?.text}</Text>
+                        <Text style={{fontSize: hp(3.5)}}>{message?.text}</Text>
                     </View>
             </View>
         )
