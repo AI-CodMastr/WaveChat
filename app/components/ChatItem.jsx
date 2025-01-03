@@ -11,6 +11,7 @@ import {
 import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
+
 export default function ChatItem({item, router, noBorder, currentUser}) {
 
      const [lastMessage, setLastMessage] = useState(undefined);

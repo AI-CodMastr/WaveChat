@@ -9,50 +9,69 @@ import {
 import ChatList from '../components/ChatList';
 import { ActivityIndicator } from 'react-native';
 import Loading from '../components/Loading';
-import { getDocs, query, where } from 'firebase/firestore';
-import { userRef } from '../../firebaseConfig';
-
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 
 export default function Home() {
-    const { logOut, user } = useAuth();
+    const { user } = useAuth();
     const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getUsers();
-    }, []);
+        const fetchUsers = async () => {
+            try {
+                console.log('Current user:', user);
+                if (!user?.userId) {
+                    console.log('No authenticated user');
+                    return;
+                }
 
-    const getUsers = async () => {
-            // fetch users
-            const q = query(userRef, where('userId', '!=', user?.uid));
-            const querySnapshot = await getDocs(q);
-            let data = [];
-            querySnapshot.forEach(doc=>{
-              data.push({...doc.data()})
-            });
+                console.log('Fetching users from Firebase...');
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef);
+                
+                console.log('Query created, fetching docs...');
+                const querySnapshot = await getDocs(q);
+                let data = [];
+                
+                querySnapshot.forEach(doc => {
+                    if (doc.data().userId !== user.userId) {
+                        console.log('User doc:', doc.data());
+                        data.push({...doc.data(), id: doc.id});
+                    }
+                });
+                
+                console.log('Total users fetched:', data.length);
+                setUsers(data);
+            } catch (error) {
+                console.error('Error details:', error.code, error.message);
+                console.error('Error fetching users:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-            setUsers(data);
-            // console.log('got users:', data);
+        if (user?.userId) {
+            fetchUsers();
+        }
+    }, [user]);
 
+    if (loading) {
+        return <Loading />;
     }
-    const LogOut = async () => {
-        await logOut();
-    }
-    // console.log('user :', user);
-  return (
-    <View className="flex-1 bg-white">
-     <StatusBar barStyle="light-content" backgroundColor="#3B82F6" />
 
-     {
-      users.length>0? (
-        <ChatList currentUser={user} users={users} />
-      ):(
-        <View className='flex-1 items-center' style={{top: hp(30)}}>
-             <ActivityIndicator size="large" />
-             {/* <Loading size={hp(20)} />   */}
+    return (
+        <View className="flex-1 bg-white">
+            <StatusBar barStyle="light-content" backgroundColor="#3B82F6" />
+
+            {users.length > 0 ? (
+                <ChatList currentUser={user} users={users} />
+            ) : (
+                <View className='flex-1 items-center' style={{top: hp(30)}}>
+                    <ActivityIndicator size="large" color="#3B82F6" />
+                </View>
+            )}
         </View>
-      )
-     }
-    </View>
-  )
+    );
 }
 

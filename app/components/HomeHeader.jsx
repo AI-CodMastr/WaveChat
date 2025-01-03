@@ -13,6 +13,7 @@ import {
     MenuTrigger,
 } from 'react-native-popup-menu';
 import { MenueItems } from './CustomMenu';
+import { router } from 'expo-router';
 import { AntDesign, Feather, SimpleLineIcons } from '@expo/vector-icons';
 
 
@@ -20,7 +21,7 @@ export default function HomeHeader() {
     const { user, logOut } = useAuth();
 
     const handleProfile = () => {
-        // Navigate to profile page
+        router.push('/profile');
     };
 
     const handleLogout = async () => {

@@ -13,19 +13,38 @@ export const AuthContextProvider = ({children}) => {
 
 
    useEffect(() => {
-       const unSub = onAuthStateChanged(auth, (user)=>{
-        // console.log('got user', user);
-        if(user){
-          setIsAuthenticated(true);
-          setUser(user);
-          updateUserData(user.uid)
-        }else{
-          setIsAuthenticated(false);
-          setUser(null);
-        }
+       const unsubscribe = onAuthStateChanged(auth, async (user) => {
+           console.log('Auth state changed:', user);
+           if (user) {
+               try {
+                   // Get additional user data from Firestore
+                   const docRef = doc(db, 'users', user.uid);
+                   const docSnap = await getDoc(docRef);
+                   
+                   if (docSnap.exists()) {
+                       const userData = docSnap.data();
+                       setUser({
+                           uid: user.uid,
+                           email: user.email,
+                           username: userData.username,
+                           profileUrl: userData.profileUrl,
+                           userId: userData.userId
+                       });
+                       setIsAuthenticated(true);
+                   } else {
+                       console.log('No user document found!');
+                   }
+               } catch (error) {
+                   console.error('Error fetching user data:', error);
+               }
+           } else {
+               setUser(null);
+               setIsAuthenticated(false);
+           }
        });
-       return unSub;
-   }, [])
+
+       return () => unsubscribe();
+   }, []);
 
    const updateUserData = async (userId) => {
     const docRef = doc(db, 'users', userId);
