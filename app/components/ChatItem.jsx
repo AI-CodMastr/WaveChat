@@ -8,7 +8,7 @@ import {
   } from 'react-native-responsive-screen';
   import { blurhash } from '../../utils/common';
   import { Image } from 'expo-image';
-import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query, where, limit } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
 
@@ -21,16 +21,21 @@ export default function ChatItem({item, router, noBorder, currentUser}) {
         let roomId = getRoomId(currentUser?.userId, item?.userId);
         const docRef = doc(db, "rooms", roomId);
         const messagesRef = collection(docRef, "messages");
-        const q = query(messagesRef, orderBy('createdAt', 'desc'));
 
-        let unsub = onSnapshot(q, (snapShot)=> {
-            let allMessages = snapShot.docs.map(doc => {
-                return doc.data();
-            })
-            setLastMessage(allMessages[0]? allMessages[0]: null);
+        // Get last message only
+        const lastMessageQuery = query(messagesRef, orderBy('createdAt', 'desc'), limit(1));
+
+        const unsubLastMessage = onSnapshot(lastMessageQuery, (snapshot) => {
+          const messages = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setLastMessage(messages[0] || null);
         });
 
-        return unsub;
+        return () => {
+          unsubLastMessage();
+        };
     }, []);
 
     console.log("last msg :", lastMessage);
@@ -80,15 +85,26 @@ export default function ChatItem({item, router, noBorder, currentUser}) {
     };
 
     const renderLastMessage = () => {
-        if(typeof lastMessage == 'undefined') return 'Loading...';
-        if(lastMessage){
-            if(currentUser?.userId == lastMessage?.userId) return "You: "+lastMessage?.text;
-            return lastMessage?.text;
-    }else{
-        return "Say Hi 👋"
-    }
+        if (typeof lastMessage === 'undefined') {
+          return 'Loading...';
+        }
+        if (!lastMessage) {
+          return 'Start a conversation 👋';
+        }
 
-    }
+        const isLastMessageRead = lastMessage.read || lastMessage.userId === currentUser?.userId;
+        const lastSeenTime = lastMessage.createdAt ? getTimeDisplay(lastMessage.createdAt) : '';
+        
+        if (isLastMessageRead) {
+          return `Last seen ${lastSeenTime}`;
+        }
+
+        if (currentUser?.userId === lastMessage.userId) {
+          return `You: ${lastMessage.text}`;
+        }
+        
+        return lastMessage.text;
+    };
 
   return (
     <TouchableOpacity onPress={openChatroom} className={`flex-row justify-between mx-4 items-center gap-3 mb-4 pb-2
@@ -103,11 +119,18 @@ export default function ChatItem({item, router, noBorder, currentUser}) {
 
       {/* name, last msg and time  */}
        <View className="flex-1 gap-1">
-        <View className="flex-row justify-between">
+        <View className="flex-row justify-between items-center">
             <Text style={{fontSize: hp(2.4)}} className="font-semibold text-neutral-800">{item?.username}</Text>
-            <Text style={{fontSize: hp(1.9)}} className="font-medium text-neutral-600">{renderTime()}</Text>
+            <Text style={{fontSize: hp(1.9)}} className="font-medium text-neutral-600">
+              {renderTime()}
+            </Text>
         </View>
-        <Text style={{fontSize: hp(1.8)}} className="font-medium text-neutral-500">{renderLastMessage()}</Text>
+        <Text 
+          style={{fontSize: hp(1.8)}} 
+          className={`font-medium ${lastMessage?.read ? 'text-gray-400' : 'text-gray-600'}`}
+        >
+          {renderLastMessage()}
+        </Text>
 
        </View>
 

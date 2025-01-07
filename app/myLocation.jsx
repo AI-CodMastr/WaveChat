@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StatusBar, Alert, Dimensions } from 'react-native'
+import { View, Text, TouchableOpacity, StatusBar, Alert, Dimensions, Share } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
@@ -80,6 +80,33 @@ export default function MyLocationScreen() {
     }
   };
 
+  const handleShareLocation = async () => {
+    if (!location) {
+      Alert.alert('Error', 'Unable to share location. Please update your location first.');
+      return;
+    }
+
+    try {
+      const locationUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+      const result = await Share.share({
+        message: `Hey! Check out my location: ${locationUrl}`,
+        title: 'Share Location'
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log('shared with activity type of', result.activityType);
+        } else {
+          console.log('shared');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log('dismissed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share location');
+    }
+  };
+
   return (
     <View className="flex-1 bg-white">
       <StatusBar barStyle="light-content" backgroundColor="#3B82F6" />
@@ -127,7 +154,7 @@ export default function MyLocationScreen() {
       </View>
 
       {/* Action Buttons */}
-      <View className="p-4 space-y-3">
+      <View className="p-4 space-y-3 gap-2">
         <TouchableOpacity 
           onPress={handleUpdateLocation}
           disabled={loading || !location}
@@ -135,6 +162,17 @@ export default function MyLocationScreen() {
         >
           <Text className="text-white font-medium text-lg">
             {loading ? <Text>Updating Location...</Text> : <Text>Update My Location</Text>}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          onPress={handleShareLocation}
+          disabled={!location}
+          className={`flex-row items-center justify-center p-4 rounded-xl ${!location ? 'bg-gray-300' : 'bg-green-500'}`}
+        >
+          <Ionicons name="share-social" size={24} color="white" className="mr-2" />
+          <Text className="text-white font-medium text-lg ml-2">
+            Share Current Location
           </Text>
         </TouchableOpacity>
 

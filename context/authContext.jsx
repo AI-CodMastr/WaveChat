@@ -2,8 +2,9 @@ import { createUserWithEmailAndPassword,onAuthStateChanged, signInWithEmailAndPa
 import { createContext, useState } from "react";
 import { useEffect } from "react";
 import { useContext } from "react";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
+import { registerForPushNotificationsAsync } from "../utils/notifications";
 
 export const AuthContext = createContext();
 
@@ -106,6 +107,22 @@ export const AuthContextProvider = ({children}) => {
   const updateUserInContext = (userData) => {
     setUser(userData);
   };
+
+  useEffect(() => {
+    const registerDevice = async () => {
+      const token = await registerForPushNotificationsAsync();
+      if (token && user?.uid) {
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          expoPushToken: token
+        });
+      }
+    };
+
+    if (user) {
+      registerDevice();
+    }
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{user, isAuthenticated, login, logOut, register, updateUserInContext}}>

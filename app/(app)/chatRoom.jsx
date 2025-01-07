@@ -10,9 +10,11 @@ import {
 } from 'react-native-responsive-screen';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/authContext';
-import { addDoc, collection, doc, onSnapshot, orderBy, query, setDoc, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, onSnapshot, orderBy, query, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { getRoomId, blurhash } from '../../utils/common';
+import * as Notifications from 'expo-notifications';
+import { sendPushNotification } from '../../utils/notifications';
 
 const MessageItem = ({ message, isSender, showUserImage }) => {
   const messageDate = new Date(message.createdAt.toDate());
@@ -128,19 +130,55 @@ export default function ChatRoom() {
             const messagesRef = collection(docRef, "messages");
             setMessage('');
             
-            const newDoc = await addDoc(messagesRef, {
+            const newMessage = {
                 userId: user?.userId,
                 text: messageText,
                 profileUrl: user?.profileUrl,
                 senderName: user?.username,
-                createdAt: Timestamp.fromDate(new Date())
-            });
+                createdAt: Timestamp.fromDate(new Date()),
+                read: false
+            };
 
-            console.log('new message Id :', newDoc.id);
+            await addDoc(messagesRef, newMessage);
+
+            // Send notification to receiver
+            if (item?.expoPushToken) {
+                await sendPushNotification(
+                    item.expoPushToken,
+                    user?.username,
+                    messageText
+                );
+            }
+
         } catch(err) {
             Alert.alert("message", err.message);
         }
     }
+
+    // Mark messages as read when opened
+    useEffect(() => {
+        if (messages.length > 0) {
+            const markMessagesAsRead = async () => {
+                const roomId = getRoomId(user?.userId, item?.userId);
+                const docRef = doc(db, "rooms", roomId);
+                const messagesRef = collection(docRef, "messages");
+                
+                const unreadMessages = messages.filter(
+                    msg => !msg.read && msg.userId !== user?.userId
+                );
+
+                const batch = writeBatch(db);
+                unreadMessages.forEach(msg => {
+                    const messageRef = doc(messagesRef, msg.id);
+                    batch.update(messageRef, { read: true });
+                });
+
+                await batch.commit();
+            };
+
+            markMessagesAsRead();
+        }
+    }, [messages]);
 
     const groupMessagesByDate = (messages) => {
         const groups = {};
